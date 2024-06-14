@@ -3,7 +3,7 @@ let progress = document.getElementById('progress');
 let responseDiv = document.getElementById('response');
 
 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-    dropArea.addEventListener(eventName, preventDefaults, false)
+    dropArea.addEventListener(eventName, preventDefaults, false);
 });
 
 function preventDefaults(e) {
@@ -12,11 +12,11 @@ function preventDefaults(e) {
 }
 
 ['dragenter', 'dragover'].forEach(eventName => {
-    dropArea.addEventListener(eventName, () => dropArea.classList.add('highlight'), false)
+    dropArea.addEventListener(eventName, () => dropArea.classList.add('highlight'), false);
 });
 
 ['dragleave', 'drop'].forEach(eventName => {
-    dropArea.addEventListener(eventName, () => dropArea.classList.remove('highlight'), false)
+    dropArea.addEventListener(eventName, () => dropArea.classList.remove('highlight'), false);
 });
 
 dropArea.addEventListener('drop', handleDrop, false);
@@ -29,9 +29,22 @@ function handleDrop(e) {
 }
 
 function handleFiles(files) {
-    files = [...files];
+    const fileList = document.getElementById('fileElem').files;
+    let newFileList = new DataTransfer();
+    let fileNames = new Set();
+
+    for (let i = 0; i < fileList.length; i++) {
+        newFileList.items.add(fileList[i]);
+        fileNames.add(fileList[i].name);
+    }
+    for (let i = 0; i < files.length; i++) {
+        if (!fileNames.has(files[i].name)) {
+            newFileList.items.add(files[i]);
+        }
+    }
+    document.getElementById('fileElem').files = newFileList.files;
+    files = [...newFileList.files];
     files.forEach(previewFile);
-    document.getElementById('file-form').files = files;
 }
 
 function previewFile(file) {
@@ -45,9 +58,19 @@ function previewFile(file) {
 }
 
 async function uploadFiles() {
-    let form = document.getElementById('file-form');
-    let formData = new FormData(form);
-    progress.innerText = 'Uploading... Please wait.';
+    let fileElem = document.getElementById('fileElem');
+    let files = fileElem.files;
+    if (files.length === 0) {
+        responseDiv.innerText = "Please select some files first!";
+        return;
+    }
+
+    let formData = new FormData();
+    for (let i = 0; i < files.length; i++) {
+        formData.append('files', files[i]);
+    }
+
+    progress.innerText = 'Uploading...Please wait.';
 
     let response = await fetch('/upload/', {
         method: 'POST',

@@ -14,7 +14,7 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-DATABASE_URL = "postgres://youremail:yourpassword@localhost:5432/yourdatabase"
+DATABASE_URL = "postgres://neondb_owner:eaFy6dnzk2iG@ep-fragrant-wave-a5lzx8ay.us-east-2.aws.neon.tech/neondb?sslmode=require&options=project%3Dep-fragrant-wave-a5lzx8ay"
 pool = psycopg2.pool.SimpleConnectionPool(0, 80, DATABASE_URL)
 
 
@@ -30,12 +30,12 @@ def create_table():
   cur.execute("DROP TABLE IF EXISTS uploads;")
 
   cur.execute("""
-    CREATE TABLE IF NOT EXISTS uploads (
-        id SERIAL PRIMARY KEY,
-        filename TEXT NOT NULL,
-        file_url TEXT NOT NULL,
-        file_content BYTEA NOT NULL
-    );
+        CREATE TABLE IF NOT EXISTS uploads (
+            id SERIAL PRIMARY KEY,
+            filename TEXT NOT NULL,
+            file_url TEXT NOT NULL,
+            file_content BYTEA NOT NULL
+        );
     """)
 
   conn.commit()
@@ -56,8 +56,12 @@ async def main():
 @app.post("/upload/")
 async def upload_files(files: list[UploadFile] = File(...)):
   file_urls = []
+  uploaded_files = set()
 
   for file in files:
+    if file.filename in uploaded_files:
+      continue
+
     unique_filename = f"{uuid.uuid4()}_{file.filename}"
     file_path = os.path.join(UPLOAD_DIR, unique_filename)
 
@@ -72,13 +76,13 @@ async def upload_files(files: list[UploadFile] = File(...)):
     conn = pool.getconn()
     cur = conn.cursor()
     cur.execute(
-        """
-            INSERT INTO uploads (filename, file_url, file_content)
-            VALUES (%s, %s, %s)
-            """, (file.filename, file_url, content))
+        "INSERT INTO uploads (filename, file_url, file_content) VALUES (%s, %s, %s)",
+        (file.filename, file_url, content))
     conn.commit()
     cur.close()
     pool.putconn(conn)
+
+    uploaded_files.add(file.filename)
 
   return JSONResponse(content={"file_urls": file_urls})
 

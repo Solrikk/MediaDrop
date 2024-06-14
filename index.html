@@ -3,15 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload Images</title>
+    <title>PhotoDrop</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <h1>Upload Images</h1>
+    <h1>PhotoDrop</h1>
     <div id="drop-area">
         <form id="file-form">
             <input type="file" id="fileElem" name="files" multiple accept="image/*" style="display:none" onchange="handleFiles(this.files)">
-            <label class="button" for="fileElem">Select some files</label>
+            <label class="button" for="fileElem">Select Files</label>
         </form>
         <button type="button" onclick="uploadFiles()" class="button">Upload</button>
         <div id="gallery"></div>
