@@ -58,8 +58,7 @@ async def upload_files(files: list[UploadFile] = File(...)):
   file_urls = []
 
   for file in files:
-    file_extension = file.filename.split(".")[-1]
-    unique_filename = f"{uuid.uuid4()}.{file_extension}"
+    unique_filename = f"{uuid.uuid4()}_{file.filename}"
     file_path = os.path.join(UPLOAD_DIR, unique_filename)
 
     content = await file.read()
