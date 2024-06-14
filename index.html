@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Images</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h1>Upload Images</h1>
+    <div id="drop-area">
+        <form action="/upload/" enctype="multipart/form-data" method="post" id="file-form">
+            <input type="file" id="fileElem" name="files" multiple accept="image/*" style="display:none" onchange="handleFiles(this.files)">
+            <label class="button" for="fileElem">Select some files</label>
+            <input type="submit" value="Upload">
+        </form>
+        <div id="gallery"></div>
+    </div>
+    <script src="/static/script.js"></script>
+</body>
+</html>
