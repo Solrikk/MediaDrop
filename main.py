@@ -14,7 +14,7 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-DATABASE_URL = "YOUR_POSTGRSQL_CODEMANE"
+DATABASE_URL = "postgres://youremail:yourpassword@localhost:5432/yourdatabase"
 pool = psycopg2.pool.SimpleConnectionPool(0, 80, DATABASE_URL)
 
 
@@ -27,11 +27,14 @@ def create_table():
   conn = pool.getconn()
   cur = conn.cursor()
 
+  cur.execute("DROP TABLE IF EXISTS uploads;")
+
   cur.execute("""
     CREATE TABLE IF NOT EXISTS uploads (
         id SERIAL PRIMARY KEY,
         filename TEXT NOT NULL,
-        file_url TEXT NOT NULL
+        file_url TEXT NOT NULL,
+        file_content BYTEA NOT NULL
     );
     """)
 
@@ -59,8 +62,9 @@ async def upload_files(files: list[UploadFile] = File(...)):
     unique_filename = f"{uuid.uuid4()}.{file_extension}"
     file_path = os.path.join(UPLOAD_DIR, unique_filename)
 
+    content = await file.read()
+
     async with aiofiles.open(file_path, 'wb') as out_file:
-      content = await file.read()
       await out_file.write(content)
 
     file_url = f"http://{os.environ.get('HOSTNAME', 'localhost')}/uploads/{unique_filename}"
@@ -70,9 +74,9 @@ async def upload_files(files: list[UploadFile] = File(...)):
     cur = conn.cursor()
     cur.execute(
         """
-        INSERT INTO uploads (filename, file_url)
-        VALUES (%s, %s)
-        """, (file.filename, file_url))
+            INSERT INTO uploads (filename, file_url, file_content)
+            VALUES (%s, %s, %s)
+            """, (file.filename, file_url, content))
     conn.commit()
     cur.close()
     pool.putconn(conn)
