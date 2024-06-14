@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 import os
 import uuid
 import aiofiles
+import psycopg2.pool
 
 app = FastAPI()
 
@@ -12,6 +13,34 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+DATABASE_URL = "YOUR_POSTGRSQL_CODEMANE"
+pool = psycopg2.pool.SimpleConnectionPool(0, 80, DATABASE_URL)
+
+
+@app.on_event("shutdown")
+async def shutdown():
+  pool.closeall()
+
+
+def create_table():
+  conn = pool.getconn()
+  cur = conn.cursor()
+
+  cur.execute("""
+    CREATE TABLE IF NOT EXISTS uploads (
+        id SERIAL PRIMARY KEY,
+        filename TEXT NOT NULL,
+        file_url TEXT NOT NULL
+    );
+    """)
+
+  conn.commit()
+  cur.close()
+  pool.putconn(conn)
+
+
+create_table()
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -28,15 +57,25 @@ async def upload_files(files: list[UploadFile] = File(...)):
   for file in files:
     file_extension = file.filename.split(".")[-1]
     unique_filename = f"{uuid.uuid4()}.{file_extension}"
-
     file_path = os.path.join(UPLOAD_DIR, unique_filename)
 
     async with aiofiles.open(file_path, 'wb') as out_file:
       content = await file.read()
       await out_file.write(content)
 
-    file_url = f"http://url-solrikk/uploads/{unique_filename}"
+    file_url = f"http://{os.environ.get('HOSTNAME', 'localhost')}/uploads/{unique_filename}"
     file_urls.append(file_url)
+
+    conn = pool.getconn()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        INSERT INTO uploads (filename, file_url)
+        VALUES (%s, %s)
+        """, (file.filename, file_url))
+    conn.commit()
+    cur.close()
+    pool.putconn(conn)
 
   return JSONResponse(content={"file_urls": file_urls})
 

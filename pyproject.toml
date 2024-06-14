@@ -9,6 +9,7 @@ python = ">=3.10.0,<3.11"
 fastapi = "^0.104.0"
 uvicorn = "0.23.2"
 aiofiles = "^23.2.1"
+psycopg2-binary = "^2.9.9"
 
 [tool.pyright]
 # https://github.com/microsoft/pyright/blob/main/docs/configuration.md
