@@ -1,90 +1,116 @@
 body {
-    font-family: 'Lato', sans-serif;
-    background: linear-gradient(to right, #ece9e6, #ffffff);
-    color: #333;
-    margin: 0;
-    padding: 20px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-family: "Geist Sans", "SF Pro Text", "SF Pro Icons", "AOS Icons", "Helvetica Neue", Helvetica, Arial, sans-serif, system-ui;
+  background: hsl(0 0% 6%);
+  margin: 0;
+}
+
+body::before {
+  --line: hsl(0 0% 95% / 0.15);
+  content: "";
+  height: 100vh;
+  width: 100vw;
+  position: fixed;
+  background:
+    linear-gradient(90deg, var(--line) 1px, transparent 1px 10vmin) 0 -5vmin / 10vmin 10vmin,
+    linear-gradient(var(--line) 1px, transparent 1px 10vmin) 0 -5vmin / 10vmin 10vmin;
+  mask: linear-gradient(-15deg, transparent 30%, white);
+  top: 0;
+  z-index: -1;
+  transform: translate3d(0, 0, -100vmin);
 }
 
 h1 {
-    margin-bottom: 20px;
-    font-weight: 700;
-    color: #039be5;
-    text-align: center;
+  margin-bottom: 20px;
+  font-weight: 700;
+  color: #9c03e2;
+  text-align: center;
 }
 
 #drop-area {
-    border: 2px dashed #ccc;
-    border-radius: 10px;
-    width: 100%;
-    max-width: 600px;
-    padding: 20px;
-    text-align: center;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
-    background-color: #fbfcfd;
-    color: #333;
-    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);
-    box-sizing: border-box;
+  border: 2px dashed rgba(255, 255, 255, 0.5);
+  border-radius: 10px;
+  width: 80%;
+  max-width: 600px;
+  padding: 20px;
+  text-align: center;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+  background-color: transparent;
+  color: #fff;
+  box-sizing: border-box;
 }
 
 .highlight {
-    background-color: #e0f7fa;
-    border-color: #039be5;
+  background-color: rgba(224, 247, 250, 0.2);
+  border-color: #039be5;
 }
 
 #drop-area .button {
-    display: inline-block;
-    padding: 10px 20px;
-    color: white;
-    background-color: #039be5;
-    border: none;
-    border-radius: 5px;
-    text-decoration: none;
-    font-size: 16px;
-    margin-top: 20px;
-    cursor: pointer;
-    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  display: inline-block;
+  padding: 10px 20px;
+  color: white;
+  background-color: #e203b9;
+  border: none;
+  border-radius: 5px;
+  text-decoration: none;
+  font-size: 14px;
+  margin: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 #drop-area .button:hover {
-    background-color: #0288d1;
-    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+  background-color: #8e02cf;
+  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 #gallery {
-    margin-top: 20px;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
+  margin-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
 }
 
 #gallery img {
-    max-width: 150px;
-    margin: 10px;
-    border: 2px solid #ddd;
-    border-radius: 10px;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  max-width: 120px;
+  margin: 10px;
+  border: 2px solid #ddd;
+  border-radius: 10px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 #gallery img:hover {
-    transform: scale(1.1);
-    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+  transform: scale(1.1);
+  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 #progress {
-    margin-top: 20px;
-    font-size: 14px;
-    color: #333;
+  margin-top: 20px;
+  font-size: 14px;
+  color: #fff;
 }
 
 #response {
-    margin-top: 20px;
-    text-align: left;
-    max-width: 100%;
-    word-wrap: break-word;
+  margin-top: 20px;
+  text-align: left;
+  max-width: 100%;
+  word-wrap: break-word;
+  white-space: nowrap;
+}
+
+#response a {
+  display: inline !important;
+  color: #4CAF50;
+}
+
+@media (max-width: 600px) {
+  .button {
+    width: 100%;
+    padding: 12px;
+  }
 }
