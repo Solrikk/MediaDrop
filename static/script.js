@@ -28,7 +28,7 @@ function handleDrop(e) {
     handleFiles(files);
 }
 
-function handleFiles(files) {
+async function handleFiles(files) {
     const fileList = document.getElementById('fileElem').files;
     let newFileList = new DataTransfer();
     let fileNames = new Set();
@@ -51,9 +51,23 @@ function previewFile(file) {
     let reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onloadend = function() {
-        let img = document.createElement('img');
-        img.src = reader.result;
-        document.getElementById('gallery').appendChild(img);
+        let elem;
+        if (file.type.startsWith('video/')) {
+            elem = document.createElement('video');
+            elem.src = reader.result;
+            elem.controls = true;
+            elem.style.maxWidth = '120px';
+            elem.style.margin = '10px';
+            elem.style.border = '2px solid #ddd';
+            elem.style.borderRadius = '10px';
+        } else if (file.type.startsWith('image/')) {
+            elem = document.createElement('img');
+            elem.src = reader.result;
+        }
+
+        if (elem) {
+            document.getElementById('gallery').appendChild(elem);
+        }
     }
 }
 
