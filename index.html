@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MediaoDrop</title>
+    <title>MediaDrop</title>
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css">
 </head>
@@ -12,9 +12,15 @@
     <div id="drop-area">
         <form id="file-form">
             <input type="file" id="fileElem" name="files" webkitdirectory directory multiple accept="image/*,video/*,.zip,.rar" style="display:none" onchange="handleFiles(this.files)">
-            <label class="button" for="fileElem">Select Files</label>
+            <label class="button" for="fileElem">Выбрать файлы</label>
         </form>
-        <button type="button" onclick="uploadFiles()" class="button">Upload</button>
+        <button type="button" onclick="uploadFiles()" class="button">Загрузить</button>
+        <div>
+            <label for="delimiter">Разделитель:</label>
+            <input type="text" id="delimiter" placeholder="/" value="/" style="width: 50px;">
+            <input type="checkbox" id="singleLineCheckbox">
+            <label for="singleLineCheckbox">Показать URL в одну строку</label>
+        </div>
         <div id="gallery"></div>
         <div id="response"></div>
         <div id="progress"></div>
