@@ -17,7 +17,7 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-DATABASE_URL = "postgresql://yourbdcode"
+DATABASE_URL = "postgresql://gen_user:y~%25%3BG9934fsP%26H@176.57.217.236:5432/default_db"
 pool = psycopg2.pool.SimpleConnectionPool(0, 80, DATABASE_URL)
 
 
@@ -75,7 +75,6 @@ async def upload_files(files: list[UploadFile] = File(...)):
     filename_main_part = "_".join(sanitized_filename.split('_')[:5])
     filename_ext = file.filename.split('.')[-1]
 
-    # Handle archive files
     if filename_ext in ['zip', 'rar']:
       archive_path = temp_dir / file.filename
       async with aiofiles.open(archive_path, 'wb') as out_file:
@@ -90,7 +89,6 @@ async def upload_files(files: list[UploadFile] = File(...)):
           await handle_single_file(extracted_file.name, content, file_urls)
 
     else:
-      # Non-archive files processing
       content = await file.read()
       await handle_single_file(file.filename, content, file_urls)
 
