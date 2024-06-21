@@ -4,46 +4,36 @@ from fastapi.staticfiles import StaticFiles
 import os
 import uuid
 import aiofiles
-import psycopg2.pool
-from pyunpack import Archive
+import boto3
 from pathlib import Path
-import shutil
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = FastAPI()
 
-UPLOAD_DIR = Path("uploads")
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-
-app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-DATABASE_URL = "postgresql://gen_user:y~%25%3BG9934fsP%26H@176.57.217.236:5432/default_db"
-pool = psycopg2.pool.SimpleConnectionPool(0, 80, DATABASE_URL)
+S3_URL = "https://s3.timeweb.cloud"
+S3_REGION = "ru-1"
+S3_PUBLIC_PATH_STYLE = "https://s3.timeweb.cloud/68597a50-solrikk/{file_name}"
+S3_PUBLIC_VIRTUAL_HOSTED_STYLE = "https://_yourkey_k.s3.timeweb.cloud/{file_name}"
+
+S3_ACCESS_KEY = "2YLZ7SZSE6AJQE58PK85"
+S3_SECRET_ACCESS_KEY = "_yourkey_"
+S3_BUCKET = "_yourkey_"
+
+s3_client = boto3.client('s3',
+                         endpoint_url=S3_URL,
+                         aws_access_key_id=S3_ACCESS_KEY,
+                         aws_secret_access_key=S3_SECRET_ACCESS_KEY,
+                         region_name=S3_REGION)
 
 
-@app.on_event("shutdown")
-async def shutdown():
-  pool.closeall()
-
-
-def create_table():
-  conn = pool.getconn()
-  cur = conn.cursor()
-  cur.execute("DROP TABLE IF EXISTS uploads;")
-  cur.execute("""
-        CREATE TABLE IF NOT EXISTS uploads (
-            id SERIAL PRIMARY KEY,
-            filename TEXT NOT NULL,
-            file_url TEXT NOT NULL,
-            file_content BYTEA NOT NULL
-        );
-    """)
-  conn.commit()
-  cur.close()
-  pool.putconn(conn)
-
-
-create_table()
+def shorten_filename(filename, max_length=10):
+  ext = filename[filename.rfind('.'):]
+  base_name = filename[:filename.rfind('.')]
+  return base_name[:max_length].replace(' ', '_') + ext
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -57,65 +47,42 @@ async def main():
 async def upload_files(files: list[UploadFile] = File(...)):
   supported_file_types = ('.png', '.jpg', '.jpeg', '.gif', '.mp4', '.mov',
                           '.avi', '.mkv', '.zip', '.rar')
-  temp_dir = Path('temp_uploads')
-  temp_dir.mkdir(parents=True, exist_ok=True)
 
   file_urls = []
-  uploaded_files = set()
 
   for file in files:
-    if file.filename in uploaded_files or not file.filename.lower().endswith(
-        supported_file_types):
+    if not file.filename.lower().endswith(supported_file_types):
       continue
 
-    sanitized_filename = ''.join(
-        c if c.isalnum() or c in '-_.' else '_'
-        for c in file.filename.replace(' ', '_')).strip('_')
+    original_filename = file.filename
+    short_filename = shorten_filename(original_filename)
+    unique_filename = f"{uuid.uuid4().hex[:8]}_{short_filename}"
 
-    filename_main_part = "_".join(sanitized_filename.split('_')[:5])
-    filename_ext = file.filename.split('.')[-1]
+    content = await file.read()
 
-    if filename_ext in ['zip', 'rar']:
-      archive_path = temp_dir / file.filename
-      async with aiofiles.open(archive_path, 'wb') as out_file:
-        content = await file.read()
-        await out_file.write(content)
-      Archive(str(archive_path)).extractall(str(temp_dir))
+    s3_client.put_object(Bucket=S3_BUCKET,
+                         Key=unique_filename,
+                         Body=content,
+                         ACL='public-read',
+                         ContentType=file.content_type)
 
-      extracted_files = list(temp_dir.glob('**/*'))
-      for extracted_file in extracted_files:
-        if extracted_file.suffix.lower() in supported_file_types:
-          content = extracted_file.read_bytes()
-          await handle_single_file(extracted_file.name, content, file_urls)
+    file_url = S3_PUBLIC_VIRTUAL_HOSTED_STYLE.format(file_name=unique_filename)
+    file_urls.append(file_url)
 
-    else:
-      content = await file.read()
-      await handle_single_file(file.filename, content, file_urls)
-
-    uploaded_files.add(file.filename)
-
-  shutil.rmtree(temp_dir)
   return JSONResponse(content={"file_urls": file_urls})
 
 
-async def handle_single_file(filename, content, file_urls):
-  unique_filename = f"{Path(filename).stem}_{uuid.uuid4().hex[:8]}{Path(filename).suffix}"
-  file_path = UPLOAD_DIR / unique_filename
+@app.get("/files/")
+async def get_files():
+  response = s3_client.list_objects_v2(Bucket=S3_BUCKET)
+  files = response.get('Contents', [])
 
-  async with aiofiles.open(file_path, 'wb') as out_file:
-    await out_file.write(content)
+  available_files = []
+  for file in files:
+    file_url = S3_PUBLIC_VIRTUAL_HOSTED_STYLE.format(file_name=file['Key'])
+    available_files.append({"filename": file['Key'], "url": file_url})
 
-  file_url = f"http://{os.environ.get('HOSTNAME', 'localhost')}/uploads/{unique_filename}"
-  file_urls.append(file_url)
-
-  conn = pool.getconn()
-  cur = conn.cursor()
-  cur.execute(
-      "INSERT INTO uploads (filename, file_url, file_content) VALUES (%s, %s, %s)",
-      (filename, file_url, content))
-  conn.commit()
-  cur.close()
-  pool.putconn(conn)
+  return JSONResponse(content={"available_files": available_files})
 
 
 if __name__ == "__main__":
