@@ -71,11 +71,18 @@ function previewFile(file) {
     }
 }
 
+function shortenFilename(filename, maxLength = 10) {
+    const ext = filename.slice(filename.lastIndexOf('.'));
+    const baseName = filename.slice(0, filename.lastIndexOf('.'));
+    return baseName.slice(0, maxLength).replace(/\s/g, '_') + ext;
+}
+
 async function uploadFiles() {
     let fileElem = document.getElementById('fileElem');
     let files = fileElem.files;
+    
     if (files.length === 0) {
-        responseDiv.innerText = "Please select some files first!";
+        responseDiv.innerText = "Пожалуйста, выберите файлы!";
         return;
     }
 
@@ -84,7 +91,7 @@ async function uploadFiles() {
         formData.append('files', files[i]);
     }
 
-    progress.innerText = 'Uploading...Please wait.';
+    progress.innerText = 'Загрузка... Пожалуйста, подождите.';
 
     let response = await fetch('/upload/', {
         method: 'POST',
@@ -93,7 +100,20 @@ async function uploadFiles() {
 
     let result = await response.json();
 
-    progress.innerText = 'Upload complete.';
-    let links = result.file_urls.map(url => `<a href="${url}" target="_blank">${url}</a>`).join('<br>');
-    responseDiv.innerHTML = links;
+    progress.innerText = 'Загрузка завершена.';
+
+    let singleLineCheckbox = document.getElementById('singleLineCheckbox');
+    let delimiter = document.getElementById('delimiter').value || '/';
+
+    let links = result.file_urls.map(url => {
+        const filename = url.split('/').pop();
+        const shortenedName = shortenFilename(filename);
+        return `<a href="${url}" target="_blank">${shortenedName}</a>`;
+    });
+
+    if (singleLineCheckbox.checked) {
+        responseDiv.innerHTML = links.join(delimiter);
+    } else {
+        responseDiv.innerHTML = links.join('<br>');
+    }
 }
