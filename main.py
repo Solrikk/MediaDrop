@@ -1,11 +1,12 @@
-from fastapi import FastAPI, File, UploadFile
+import urllib.parse
+import re
+from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 import os
 import uuid
 import aiofiles
 import boto3
-from pathlib import Path
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -16,12 +17,11 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 S3_URL = "https://s3.timeweb.cloud"
 S3_REGION = "ru-1"
-S3_PUBLIC_PATH_STYLE = "https://s3.timeweb.cloud/68597a50-solrikk/{file_name}"
-S3_PUBLIC_VIRTUAL_HOSTED_STYLE = "https://_yourkey_k.s3.timeweb.cloud/{file_name}"
+S3_PUBLIC_VIRTUAL_HOSTED_STYLE = "https://solrikk.s3.timeweb.cloud/{file_name}"
 
-S3_ACCESS_KEY = "2YLZ7SZSE6AJQE58PK85"
-S3_SECRET_ACCESS_KEY = "_yourkey_"
-S3_BUCKET = "_yourkey_"
+S3_ACCESS_KEY = "KEY"
+S3_SECRET_ACCESS_KEY = "KEY"
+S3_BUCKET = "KEYsolrikk"
 
 s3_client = boto3.client('s3',
                          endpoint_url=S3_URL,
@@ -30,17 +30,17 @@ s3_client = boto3.client('s3',
                          region_name=S3_REGION)
 
 
-def shorten_filename(filename, max_length=10):
-  ext = filename[filename.rfind('.'):]
-  base_name = filename[:filename.rfind('.')]
-  return base_name[:max_length].replace(' ', '_') + ext
-
-
 @app.get("/", response_class=HTMLResponse)
 async def main():
   async with aiofiles.open("index.html", "r") as f:
     content = await f.read()
   return HTMLResponse(content=content)
+
+
+def sanitize_filename(filename):
+  filename = re.sub(r'[^A-Za-z0-9]+', '-', filename)
+  filename = filename[:20].strip('-')
+  return filename
 
 
 @app.post("/upload/")
@@ -54,19 +54,20 @@ async def upload_files(files: list[UploadFile] = File(...)):
     if not file.filename.lower().endswith(supported_file_types):
       continue
 
-    original_filename = file.filename
-    short_filename = shorten_filename(original_filename)
-    unique_filename = f"{uuid.uuid4().hex[:8]}_{short_filename}"
+    unique_id = uuid.uuid4().hex[:8]
+    sanitized_filename = sanitize_filename(file.filename.rsplit('.', 1)[0])
+    file_extension = file.filename.rsplit('.', 1)[1]
+    new_filename = f"{unique_id}-{sanitized_filename}.{file_extension}"
 
     content = await file.read()
 
     s3_client.put_object(Bucket=S3_BUCKET,
-                         Key=unique_filename,
+                         Key=new_filename,
                          Body=content,
                          ACL='public-read',
                          ContentType=file.content_type)
 
-    file_url = S3_PUBLIC_VIRTUAL_HOSTED_STYLE.format(file_name=unique_filename)
+    file_url = S3_PUBLIC_VIRTUAL_HOSTED_STYLE.format(file_name=new_filename)
     file_urls.append(file_url)
 
   return JSONResponse(content={"file_urls": file_urls})
@@ -79,7 +80,8 @@ async def get_files():
 
   available_files = []
   for file in files:
-    file_url = S3_PUBLIC_VIRTUAL_HOSTED_STYLE.format(file_name=file['Key'])
+    file_url = S3_PUBLIC_VIRTUAL_HOSTED_STYLE.format(
+        file_name=urllib.parse.quote(file['Key'], safe=''))
     available_files.append({"filename": file['Key'], "url": file_url})
 
   return JSONResponse(content={"available_files": available_files})
