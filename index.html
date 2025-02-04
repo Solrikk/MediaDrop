@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,14 +12,14 @@
     <div id="drop-area">
         <form id="file-form">
             <input type="file" id="fileElem" name="files" webkitdirectory directory multiple accept="image/*,video/*,.zip,.rar" style="display:none" onchange="handleFiles(this.files)">
-            <label class="button" for="fileElem">Выбрать файлы</label>
+            <label class="button" for="fileElem">Select Files</label>
         </form>
-        <button type="button" onclick="uploadFiles()" class="button">Загрузить</button>
+        <button type="button" onclick="uploadFiles()" class="button">Upload</button>
         <div>
-            <label for="delimiter">Разделитель:</label>
+            <label for="delimiter">Delimiter:</label>
             <input type="text" id="delimiter" placeholder="/" value="/" style="width: 50px;">
             <input type="checkbox" id="singleLineCheckbox">
-            <label for="singleLineCheckbox">Показать URL в одну строку</label>
+            <label for="singleLineCheckbox">Show URL in a single line</label>
         </div>
         <div id="gallery"></div>
         <div id="response"></div>
