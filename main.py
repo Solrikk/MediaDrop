@@ -69,7 +69,8 @@ async def upload_files(files: list[UploadFile] = File(...)):
                            Key=new_filename,
                            Body=content,
                            ACL='public-read',
-                           ContentType=file.content_type)
+                           ContentType=file.content_type,
+                           ContentDisposition=f'inline; filename="{new_filename}"')
     except Exception as e:
       print(f"S3 Upload Error: {str(e)}")
       print(f"S3 Credentials - Access Key exists: {bool(S3_ACCESS_KEY)}")
