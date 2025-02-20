@@ -58,15 +58,23 @@ async def upload_files(files: list[UploadFile] = File(...)):
     content = await file.read()
 
     try:
-      # Загружаем файл в S3
+      # Upload to S3
       s3_client.put_object(Bucket=S3_BUCKET,
                            Key=new_filename,
                            Body=content,
                            ACL='public-read',
                            ContentType=file.content_type)
     except Exception as e:
-      raise HTTPException(status_code=500,
-                          detail=f"Failed to upload file: {str(e)}")
+      print(f"S3 Upload Error: {str(e)}")
+      if "AccessDenied" in str(e):
+        raise HTTPException(status_code=500,
+                          detail="S3 access denied. Check your credentials.")
+      elif "NoSuchBucket" in str(e):
+        raise HTTPException(status_code=500,
+                          detail="S3 bucket not found. Check your bucket name.")
+      else:
+        raise HTTPException(status_code=500,
+                          detail=f"S3 upload failed: {str(e)}")
 
     file_url = S3_PUBLIC_VIRTUAL_HOSTED_STYLE.format(file_name=new_filename)
     file_urls.append(file_url)
