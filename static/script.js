@@ -1,3 +1,19 @@
+
+async function copyToClipboard(text, event) {
+    event.preventDefault();
+    try {
+        await navigator.clipboard.writeText(text);
+        const target = event.target;
+        const originalText = target.innerHTML;
+        target.innerHTML = "Copied! ✓";
+        setTimeout(() => {
+            target.innerHTML = originalText;
+        }, 1000);
+    } catch (err) {
+        console.error('Failed to copy text: ', err);
+    }
+}
+
 let dropArea = document.getElementById('drop-area');
 let progress = document.getElementById('progress');
 let responseDiv = document.getElementById('response');
@@ -116,7 +132,7 @@ async function uploadFiles() {
 
         let links = result.file_urls.map(url => {
             const fullUrl = window.location.origin + url;
-            return `<a href="${fullUrl}" target="_blank">${fullUrl}</a>`;
+            return `<a href="${fullUrl}" target="_blank" onclick="copyToClipboard('${fullUrl}', event)">${fullUrl} 📋</a>`;
         });
 
         if (singleLineCheckbox.checked) {
