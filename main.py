@@ -51,7 +51,7 @@ async def upload_files(files: list[UploadFile] = File(...)):
 
     content = await file.read()
 
-    storage_client.put_data(new_filename, content)
+    storage_client.write_data(new_filename, content)
     file_url = f"/files/{new_filename}"
     file_urls.append(file_url)
 
