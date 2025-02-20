@@ -8,6 +8,7 @@ import uuid
 import aiofiles
 import boto3
 from dotenv import load_dotenv
+import tempfile
 
 load_dotenv()
 app = FastAPI()
@@ -26,9 +27,8 @@ s3_client = boto3.client('s3',
                          aws_secret_access_key=S3_SECRET_ACCESS_KEY,
                          region_name=S3_REGION,
                          config=boto3.session.Config(
-                           s3={'addressing_style': 'path'},
-                           signature_version='s3v4'
-                         ))
+                             s3={'addressing_style': 'virtual'},
+                             signature_version='s3v4'))
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -58,32 +58,21 @@ async def upload_files(files: list[UploadFile] = File(...)):
     file_extension = file.filename.rsplit('.', 1)[1]
     new_filename = f"{unique_id}-{sanitized_filename}.{file_extension}"
 
-    # Читаем файл в память
-    content = await file.read()
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+      temp_file.write(await file.read())
+      temp_file_path = temp_file.name
 
     try:
-      print(f"Attempting S3 upload with bucket: {S3_BUCKET}")
-      print(f"File details - Name: {new_filename}, Type: {file.content_type}")
-      # Upload to S3
-      s3_client.put_object(Bucket=S3_BUCKET,
-                           Key=new_filename,
-                           Body=content,
-                           ACL='public-read',
-                           ContentType=file.content_type,
-                           ContentDisposition=f'inline; filename="{new_filename}"')
-    except Exception as e:
-      print(f"S3 Upload Error: {str(e)}")
-      print(f"S3 Credentials - Access Key exists: {bool(S3_ACCESS_KEY)}")
-      print(f"S3 Credentials - Secret Key exists: {bool(S3_SECRET_ACCESS_KEY)}")
-      if "AccessDenied" in str(e):
-        raise HTTPException(status_code=500,
-                          detail="S3 access denied. Check your credentials.")
-      elif "NoSuchBucket" in str(e):
-        raise HTTPException(status_code=500,
-                          detail="S3 bucket not found. Check your bucket name.")
-      else:
-        raise HTTPException(status_code=500,
-                          detail=f"S3 upload failed: {str(e)}")
+      with open(temp_file_path, 'rb') as data:
+        s3_client.put_object(
+            Bucket=S3_BUCKET,
+            Key=new_filename,
+            Body=data,
+            ACL='public-read',
+            ContentType=file.content_type,
+            ContentDisposition=f'inline; filename="{new_filename}"')
+    finally:
+      os.unlink(temp_file_path)
 
     file_url = S3_PUBLIC_VIRTUAL_HOSTED_STYLE.format(file_name=new_filename)
     file_urls.append(file_url)
