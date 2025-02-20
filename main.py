@@ -10,14 +10,21 @@ import boto3
 from dotenv import load_dotenv
 
 load_dotenv()
-
 app = FastAPI()
-
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-from replit.object_storage import Client
+S3_URL = "https://s3.timeweb.cloud"
+S3_REGION = "ru-1"
+S3_PUBLIC_VIRTUAL_HOSTED_STYLE = "https://solrikk.s3.timeweb.cloud/{file_name}"
+S3_ACCESS_KEY = os.getenv("S3_ACCESS_KEY")
+S3_SECRET_ACCESS_KEY = os.getenv("S3_SECRET_ACCESS_KEY")
+S3_BUCKET = os.getenv("S3_BUCKET")
 
-storage_client = Client()
+s3_client = boto3.client('s3',
+                         endpoint_url=S3_URL,
+                         aws_access_key_id=S3_ACCESS_KEY,
+                         aws_secret_access_key=S3_SECRET_ACCESS_KEY,
+                         region_name=S3_REGION)
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -37,9 +44,7 @@ def sanitize_filename(filename):
 async def upload_files(files: list[UploadFile] = File(...)):
   supported_file_types = ('.png', '.jpg', '.jpeg', '.gif', '.mp4', '.mov',
                           '.avi', '.mkv', '.zip', '.rar')
-
   file_urls = []
-
   for file in files:
     if not file.filename.lower().endswith(supported_file_types):
       continue
@@ -49,10 +54,21 @@ async def upload_files(files: list[UploadFile] = File(...)):
     file_extension = file.filename.rsplit('.', 1)[1]
     new_filename = f"{unique_id}-{sanitized_filename}.{file_extension}"
 
+    # Читаем файл в память
     content = await file.read()
 
-    storage_client.write_data(new_filename, content)
-    file_url = f"/files/{new_filename}"
+    try:
+      # Загружаем файл в S3
+      s3_client.put_object(Bucket=S3_BUCKET,
+                           Key=new_filename,
+                           Body=content,
+                           ACL='public-read',
+                           ContentType=file.content_type)
+    except Exception as e:
+      raise HTTPException(status_code=500,
+                          detail=f"Failed to upload file: {str(e)}")
+
+    file_url = S3_PUBLIC_VIRTUAL_HOSTED_STYLE.format(file_name=new_filename)
     file_urls.append(file_url)
 
   return JSONResponse(content={"file_urls": file_urls})
@@ -62,13 +78,11 @@ async def upload_files(files: list[UploadFile] = File(...)):
 async def get_files():
   response = s3_client.list_objects_v2(Bucket=S3_BUCKET)
   files = response.get('Contents', [])
-
   available_files = []
   for file in files:
     file_url = S3_PUBLIC_VIRTUAL_HOSTED_STYLE.format(
         file_name=urllib.parse.quote(file['Key'], safe=''))
     available_files.append({"filename": file['Key'], "url": file_url})
-
   return JSONResponse(content={"available_files": available_files})
 
 
