@@ -23,11 +23,14 @@ S3_ACCESS_KEY = "2YLZ7SZSE6AJQE58PK85"
 S3_SECRET_ACCESS_KEY = "TXuayVE5LyKqrVRuL2wrZQb8dVDOaxar0f7jb48P"
 S3_BUCKET = "68597a50-ppiicc"
 
+from botocore.config import Config
+
 s3_client = boto3.client('s3',
                          endpoint_url=S3_URL,
                          aws_access_key_id=S3_ACCESS_KEY,
                          aws_secret_access_key=S3_SECRET_ACCESS_KEY,
-                         region_name=S3_REGION)
+                         region_name=S3_REGION,
+                         config=Config(signature_version='s3v4'))
 
 
 @app.get("/", response_class=HTMLResponse)
