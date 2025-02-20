@@ -115,8 +115,8 @@ async function uploadFiles() {
         let delimiter = document.getElementById('delimiter').value || '/';
 
         let links = result.file_urls.map(url => {
-            const filename = url.split('/').pop();
-            return `<a href="${url}" target="_blank">${filename}</a>`;
+            const fullUrl = window.location.origin + url;
+            return `<a href="${fullUrl}" target="_blank">${fullUrl}</a>`;
         });
 
         if (singleLineCheckbox.checked) {
