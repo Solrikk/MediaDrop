@@ -24,7 +24,11 @@ s3_client = boto3.client('s3',
                          endpoint_url=S3_URL,
                          aws_access_key_id=S3_ACCESS_KEY,
                          aws_secret_access_key=S3_SECRET_ACCESS_KEY,
-                         region_name=S3_REGION)
+                         region_name=S3_REGION,
+                         config=boto3.session.Config(
+                           s3={'addressing_style': 'path'},
+                           signature_version='s3v4'
+                         ))
 
 
 @app.get("/", response_class=HTMLResponse)
