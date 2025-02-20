@@ -127,7 +127,7 @@ async function uploadFiles() {
         }
     } catch (error) {
         progress.innerText = 'Upload failed.';
-        responseDiv.innerHTML = `Error: ${error.message}`;
+        responseDiv.innerHTML = `Error: ${error.message}. Check if S3 credentials are set in Secrets.`;
         console.error('Upload error:', error);
     }
 }
