@@ -15,22 +15,9 @@ app = FastAPI()
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-S3_URL = "https://s3.timeweb.cloud"
-S3_REGION = "ru-1"
-S3_PUBLIC_VIRTUAL_HOSTED_STYLE = "https://solrikk.s3.timeweb.cloud/{file_name}"
+from replit.object_storage import Client
 
-S3_ACCESS_KEY = "2YLZ7SZSE6AJQE58PK85"
-S3_SECRET_ACCESS_KEY = "TXuayVE5LyKqrVRuL2wrZQb8dVDOaxar0f7jb48P"
-S3_BUCKET = "68597a50-ppiicc"
-
-from botocore.config import Config
-
-s3_client = boto3.client('s3',
-                         endpoint_url=S3_URL,
-                         aws_access_key_id=S3_ACCESS_KEY,
-                         aws_secret_access_key=S3_SECRET_ACCESS_KEY,
-                         region_name=S3_REGION,
-                         config=Config(signature_version='s3v4'))
+storage_client = Client()
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -64,14 +51,8 @@ async def upload_files(files: list[UploadFile] = File(...)):
 
     content = await file.read()
 
-    s3_client.put_object(Bucket=S3_BUCKET,
-                         Key=new_filename,
-                         Body=content,
-                         ACL='public-read',
-                         ContentType=file.content_type,
-                         ContentLength=len(content))
-
-    file_url = S3_PUBLIC_VIRTUAL_HOSTED_STYLE.format(file_name=new_filename)
+    storage_client.upload_bytes(new_filename, content)
+    file_url = f"/files/{new_filename}"
     file_urls.append(file_url)
 
   return JSONResponse(content={"file_urls": file_urls})
