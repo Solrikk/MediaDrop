@@ -68,7 +68,8 @@ async def upload_files(files: list[UploadFile] = File(...)):
                          Key=new_filename,
                          Body=content,
                          ACL='public-read',
-                         ContentType=file.content_type)
+                         ContentType=file.content_type,
+                         ContentLength=len(content))
 
     file_url = S3_PUBLIC_VIRTUAL_HOSTED_STYLE.format(file_name=new_filename)
     file_urls.append(file_url)
