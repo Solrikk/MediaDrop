@@ -82,7 +82,7 @@ async function uploadFiles() {
     let files = fileElem.files;
     
     if (files.length === 0) {
-        responseDiv.innerText = "Пожалуйста, выберите файлы!";
+        responseDiv.innerText = "Please select files!";
         return;
     }
 
@@ -91,29 +91,43 @@ async function uploadFiles() {
         formData.append('files', files[i]);
     }
 
-    progress.innerText = 'Загрузка... Пожалуйста, подождите.';
+    progress.innerText = 'Uploading... Please wait.';
 
-    let response = await fetch('/upload/', {
-        method: 'POST',
-        body: formData
-    });
+    try {
+        let response = await fetch('/upload/', {
+            method: 'POST',
+            body: formData
+        });
 
-    let result = await response.json();
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
-    progress.innerText = 'Загрузка завершена.';
+        let result = await response.json();
 
-    let singleLineCheckbox = document.getElementById('singleLineCheckbox');
-    let delimiter = document.getElementById('delimiter').value || '/';
+        if (!result || !result.file_urls) {
+            throw new Error('Invalid server response format');
+        }
 
-    let links = result.file_urls.map(url => {
-        const filename = url.split('/').pop();
-        const shortenedName = shortenFilename(filename);
-        return `<a href="${url}" target="_blank">${shortenedName}</a>`;
-    });
+        progress.innerText = 'Upload complete.';
 
-    if (singleLineCheckbox.checked) {
-        responseDiv.innerHTML = links.join(delimiter);
-    } else {
-        responseDiv.innerHTML = links.join('<br>');
+        let singleLineCheckbox = document.getElementById('singleLineCheckbox');
+        let delimiter = document.getElementById('delimiter').value || '/';
+
+        let links = result.file_urls.map(url => {
+            const filename = url.split('/').pop();
+            const shortenedName = shortenFilename(filename);
+            return `<a href="${url}" target="_blank">${shortenedName}</a>`;
+        });
+
+        if (singleLineCheckbox.checked) {
+            responseDiv.innerHTML = links.join(delimiter);
+        } else {
+            responseDiv.innerHTML = links.join('<br>');
+        }
+    } catch (error) {
+        progress.innerText = 'Upload failed.';
+        responseDiv.innerHTML = `Error: ${error.message}`;
+        console.error('Upload error:', error);
     }
 }
