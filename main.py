@@ -58,6 +58,8 @@ async def upload_files(files: list[UploadFile] = File(...)):
     content = await file.read()
 
     try:
+      print(f"Attempting S3 upload with bucket: {S3_BUCKET}")
+      print(f"File details - Name: {new_filename}, Type: {file.content_type}")
       # Upload to S3
       s3_client.put_object(Bucket=S3_BUCKET,
                            Key=new_filename,
@@ -66,6 +68,8 @@ async def upload_files(files: list[UploadFile] = File(...)):
                            ContentType=file.content_type)
     except Exception as e:
       print(f"S3 Upload Error: {str(e)}")
+      print(f"S3 Credentials - Access Key exists: {bool(S3_ACCESS_KEY)}")
+      print(f"S3 Credentials - Secret Key exists: {bool(S3_SECRET_ACCESS_KEY)}")
       if "AccessDenied" in str(e):
         raise HTTPException(status_code=500,
                           detail="S3 access denied. Check your credentials.")
