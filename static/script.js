@@ -116,8 +116,7 @@ async function uploadFiles() {
 
         let links = result.file_urls.map(url => {
             const filename = url.split('/').pop();
-            const shortenedName = shortenFilename(filename);
-            return `<a href="${url}" target="_blank">${shortenedName}</a>`;
+            return `<a href="${url}" target="_blank">${filename}</a>`;
         });
 
         if (singleLineCheckbox.checked) {
