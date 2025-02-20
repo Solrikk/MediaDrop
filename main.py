@@ -19,9 +19,9 @@ S3_URL = "https://s3.timeweb.cloud"
 S3_REGION = "ru-1"
 S3_PUBLIC_VIRTUAL_HOSTED_STYLE = "https://solrikk.s3.timeweb.cloud/{file_name}"
 
-S3_ACCESS_KEY = "KEY"
-S3_SECRET_ACCESS_KEY = "KEY"
-S3_BUCKET = "KEYsolrikk"
+S3_ACCESS_KEY = "2YLZ7SZSE6AJQE58PK85"
+S3_SECRET_ACCESS_KEY = "TXuayVE5LyKqrVRuL2wrZQb8dVDOaxar0f7jb48P"
+S3_BUCKET = "68597a50-ppiicc"
 
 s3_client = boto3.client('s3',
                          endpoint_url=S3_URL,
