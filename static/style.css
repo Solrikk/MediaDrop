@@ -1,161 +1,90 @@
-
 body {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  font-family: "Geist Sans", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-  margin: 0;
-  color: #fff;
+    font-family: Arial, sans-serif;
+    background: #f0f2f5;
+    margin: 0;
+    padding: 20px;
 }
 
 h1 {
-  font-size: 2.5rem;
-  margin-bottom: 30px;
-  background: linear-gradient(45deg, #ff2e63, #9c03e2);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    color: #333;
+    margin-bottom: 30px;
 }
 
 #drop-area {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
-  border: 2px dashed rgba(255, 255, 255, 0.2);
-  border-radius: 20px;
-  width: 90%;
-  max-width: 600px;
-  padding: 30px;
-  text-align: center;
-  transition: all 0.3s ease;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    border-radius: 10px;
+    background: #ffffff;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
-.highlight {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: #ff2e63;
-  transform: scale(1.02);
+.button {
+    background: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    margin: 5px;
+    transition: background 0.3s;
 }
 
-#drop-area .button {
-  background: linear-gradient(45deg, #ff2e63, #9c03e2);
-  color: white;
-  padding: 12px 24px;
-  border: none;
-  border-radius: 12px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin: 10px 5px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  display: inline-block;
-  min-width: 120px;
-}
-
-#drop-area {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.button-container {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 10px;
-  margin: 10px 0;
-}
-
-#drop-area .button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(255, 46, 99, 0.3);
+.button:hover {
+    background: #45a049;
 }
 
 #gallery {
-  margin-top: 30px;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 15px;
-  padding: 15px;
-}
-
-#gallery img {
-  width: 100%;
-  aspect-ratio: 1;
-  object-fit: cover;
-  border-radius: 12px;
-  border: 2px solid rgba(255, 255, 255, 0.1);
-  transition: all 0.3s ease;
-}
-
-#gallery img:hover {
-  transform: scale(1.05);
-  border-color: #ff2e63;
-  box-shadow: 0 5px 15px rgba(255, 46, 99, 0.3);
-}
-
-#progress {
-  margin-top: 20px;
-  font-size: 16px;
-  color: #fff;
-  opacity: 0.8;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+    margin: 20px 0;
 }
 
 #response {
-  margin-top: 20px;
-  background: rgba(255, 255, 255, 0.05);
-  padding: 15px;
-  border-radius: 12px;
-  max-width: 100%;
-  overflow-x: auto;
+    margin: 20px 0;
+    padding: 15px;
+    background: #f5f5f5;
+    border-radius: 5px;
+    word-break: break-all;
 }
 
-#response a {
-  color: #ff2e63;
-  text-decoration: none;
-  transition: color 0.3s ease;
+#progress {
+    margin: 10px 0;
+    color: #666;
+    font-weight: bold;
 }
 
-#response a:hover {
-  color: #9c03e2;
+.controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0;
+    padding: 10px;
+    background: #f8f8f8;
+    border-radius: 5px;
 }
 
-input[type="text"], input[type="checkbox"] {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
-  padding: 8px;
-  color: white;
-  margin: 5px;
-}
-
-input[type="text"]:focus {
-  outline: none;
-  border-color: #ff2e63;
-}
-
-label {
-  color: rgba(255, 255, 255, 0.8);
-  margin: 0 10px;
-}
-
-@media (max-width: 600px) {
-  h1 {
-    font-size: 2rem;
-  }
-  
-  #drop-area {
-    padding: 20px;
-    width: 85%;
-  }
-  
-  .button {
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
-    margin: 5px 0;
-  }
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-width: 500px;
+    width: 90%;
 }
