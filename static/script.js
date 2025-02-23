@@ -1,4 +1,3 @@
-
 async function copyToClipboard(text, event) {
     event.preventDefault();
     try {
@@ -94,17 +93,97 @@ function shortenFilename(filename, maxLength = 10) {
 }
 
 async function uploadFiles() {
-    let fileElem = document.getElementById('fileElem');
-    let files = fileElem.files;
-    
+    const fileInput = document.getElementById('fileElem');
+    const progress = document.getElementById('progress');
+    const responseDiv = document.getElementById('response');
+    const files = fileInput.files;
+    const singleLineCheckbox = document.getElementById('singleLine');
+    const delimiter = document.getElementById('delimiter').value || ' ';
+
+    if (files.length === 1 && files[0].name.toLowerCase().endsWith('.txt')) {
+        progress.innerText = 'Processing text file...';
+        const formData = new FormData();
+        formData.append('file', files[0]);
+
+        try {
+            const response = await fetch('/process_text_file/', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `processed_${files[0].name}`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                progress.innerText = 'Text file processed successfully!';
+                return;
+            } else {
+                throw new Error('Failed to process text file');
+            }
+        } catch (error) {
+            progress.innerText = 'Failed to process text file';
+            console.error('Error:', error);
+            return;
+        }
+    }
+
     if (files.length === 0) {
         responseDiv.innerText = "Please select files!";
         return;
     }
 
     let formData = new FormData();
+    let hasCSV = false;
+    let csvFile = null;
+
     for (let i = 0; i < files.length; i++) {
+        if (files[i].name.toLowerCase().endsWith('.csv')) {
+            hasCSV = true;
+            csvFile = files[i];
+        }
         formData.append('files', files[i]);
+    }
+
+    if (hasCSV) {
+        // Read CSV columns
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const text = e.target.result;
+            const lines = text.split('\n');
+            if (lines.length > 0) {
+                const headers = lines[0].split(';');
+                document.getElementById('csvColumns').value = headers.join(',');
+            }
+        };
+        reader.readAsText(csvFile);
+
+        const columns = await new Promise((resolve) => {
+            const modal = document.getElementById('csvModal');
+            modal.style.display = 'block';
+
+            document.getElementById('confirmColumns').onclick = () => {
+                const columns = document.getElementById('csvColumns').value;
+                modal.style.display = 'none';
+                resolve(columns);
+            };
+        });
+
+        if (columns) {
+            formData.append('columns', columns);
+        }
+    }
+
+    if (hasCSV) {
+        const columns = document.getElementById('columns').value;
+        if (columns) {
+            formData.append('columns', columns);
+        }
     }
 
     progress.innerText = 'Uploading... Please wait.';
