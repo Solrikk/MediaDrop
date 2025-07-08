@@ -11,20 +11,34 @@
     <h1>MediaDrop</h1>
     <div id="drop-area">
         <form id="file-form">
-            <input type="file" id="fileElem" name="files" webkitdirectory directory multiple accept="image/*,video/*,.zip,.rar" style="display:none" onchange="handleFiles(this.files)">
+            <input type="file" id="fileElem" name="files" webkitdirectory directory multiple accept="image/*,video/*,.zip,.rar,.csv,.txt" style="display:none" onchange="handleFiles(this.files)">
             <label class="button" for="fileElem">Select Files</label>
         </form>
         <button type="button" onclick="uploadFiles()" class="button">Upload</button>
+
+        <div class="yandex-section">
+            <h3>Или вставьте ссылку на Яндекс.Диск:</h3>
+            <input type="url" id="yandexUrl" placeholder="https://disk.yandex.ru/d/..." class="url-input">
+            <button type="button" onclick="processYandexUrl()" class="button">Обработать ссылку</button>
+        </div>
+
+        <div class="text-files-section">
+            <h3>📄 Обработка файлов со ссылками</h3>
+                <p>Загрузите текстовые (.txt) или CSV (.csv) файлы со ссылками на Яндекс.Диск для массовой обработки:</p>
+                <input type="file" id="textFiles" multiple accept=".txt,.csv" onchange="handleTextFiles(this.files)" style="margin: 10px 0;">
+                <div id="textFilesList"></div>
+                <button id="processTextBtn" onclick="processTextFiles()" class="button" style="display: none;">Обработать файлы</button>
+        </div>
         <div>
             <label for="delimiter">Delimiter:</label>
-            <input type="text" id="delimiter" placeholder="/" value="/" style="width: 50px;">
-            <input type="checkbox" id="singleLineCheckbox">
+            <input type="text" id="delimiter" placeholder="///" value="///" style="width: 60px;">
+            <input type="checkbox" id="singleLineCheckbox" checked>
             <label for="singleLineCheckbox">Show URL in a single line</label>
         </div>
         <div id="gallery"></div>
         <div id="response"></div>
         <div id="progress"></div>
     </div>
-    <script src="/static/script.js"></script>
+    <script src="static/script.js"></script>
 </body>
 </html>
